@@ -13,8 +13,13 @@ import os
 import sys
 import traceback
 
+# Must set USE_FOLIUM before importing geemap so that __init__.py loads
+# foliumap directly, avoiding a namespace collision where geemap.geemap's
+# `basemaps = Box(...)` shadows the geemap.basemaps module.
+os.environ["USE_FOLIUM"] = "1"
+
 import ee
-import geemap.foliumap as geemap
+import geemap
 
 # ---------------------------------------------------------------------------
 # Initialize Earth Engine
