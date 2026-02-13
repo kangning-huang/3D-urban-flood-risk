@@ -326,7 +326,7 @@ document.getElementById('rgb-go').onclick=function(){
 # Build the map
 # ---------------------------------------------------------------------------
 m = geemap.Map()
-m.set_center(119.38, 31.12, 8)
+m.set_center(121.47, 31.23, 11)
 m.add_basemap("CartoDB.Positron")
 
 # --- Single-band layers (initially hidden — user can toggle via layer control)
