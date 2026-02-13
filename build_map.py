@@ -260,7 +260,7 @@ var RGBLayer = L.GridLayer.extend({
 });
 
 var rgbLayer = new RGBLayer({
-  rBand:'exInunD', gBand:'exDmg_pros', bBand:'exDmg',
+  rBand:'exInunD', gBand:'exDmg', bBand:'height',
   displayMin:0.01, displayMax:0.1, opacity:0.7, zIndex:1000
 }).addTo(map);
 
@@ -282,8 +282,8 @@ var RGBCtrl = L.Control.extend({
       '<div class="rgb-body" id="rgb-body">'+
         '<div class="rgb-show"><label><input type="checkbox" id="rgb-show" checked> Show layer</label></div>'+
         '<div class="rgb-ch"><b style="color:#e74c3c">R</b>'+mkSel('rgb-r','exInunD')+'</div>'+
-        '<div class="rgb-ch"><b style="color:#27ae60">G</b>'+mkSel('rgb-g','exDmg_pros')+'</div>'+
-        '<div class="rgb-ch"><b style="color:#2980b9">B</b>'+mkSel('rgb-b','exDmg')+'</div>'+
+        '<div class="rgb-ch"><b style="color:#27ae60">G</b>'+mkSel('rgb-g','exDmg')+'</div>'+
+        '<div class="rgb-ch"><b style="color:#2980b9">B</b>'+mkSel('rgb-b','height')+'</div>'+
         '<div class="rgb-rng"><label>Min</label><input type="number" id="rgb-mn" value="0.01" step="0.001">'+
           '<span>&ndash;</span><label>Max</label><input type="number" id="rgb-mx" value="0.1" step="0.001"></div>'+
         '<div class="rgb-op"><label>Opacity</label>'+
