@@ -8,6 +8,8 @@ Usage:
     python build_map.py          # writes index.html
 """
 
+import os
+
 import ee
 import geemap.foliumap as geemap
 
@@ -17,11 +19,20 @@ import geemap.foliumap as geemap
 # In CI the service account credentials are written to a JSON file whose
 # path is stored in GOOGLE_APPLICATION_CREDENTIALS.  Locally, the default
 # credentials from `earthengine authenticate` are used.
-try:
-    ee.Initialize(opt_url="https://earthengine-highvolume.googleapis.com")
-except Exception:
-    ee.Authenticate()
-    ee.Initialize(opt_url="https://earthengine-highvolume.googleapis.com")
+EE_URL = "https://earthengine-highvolume.googleapis.com"
+credentials_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+
+if credentials_path and os.path.isfile(credentials_path):
+    # CI / service-account path
+    credentials = ee.ServiceAccountCredentials(None, credentials_path)
+    ee.Initialize(credentials, opt_url=EE_URL)
+else:
+    # Local development – use default credentials or prompt login
+    try:
+        ee.Initialize(opt_url=EE_URL)
+    except Exception:
+        ee.Authenticate()
+        ee.Initialize(opt_url=EE_URL)
 
 # ---------------------------------------------------------------------------
 # Load datasets
