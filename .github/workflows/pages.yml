@@ -3,6 +3,9 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  schedule:
+    # Rebuild daily at 06:00 UTC to refresh EE tile URLs (they expire ~24 h)
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -15,13 +18,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install geemap earthengine-api
+
+      - name: Authenticate with Earth Engine
+        env:
+          # Store your service-account JSON as a GitHub Actions secret
+          # named EE_SERVICE_ACCOUNT_KEY
+          EE_SERVICE_ACCOUNT_KEY: ${{ secrets.EE_SERVICE_ACCOUNT_KEY }}
+        run: |
+          echo "$EE_SERVICE_ACCOUNT_KEY" > /tmp/ee-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/ee-key.json
+
+      - name: Build index.html
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/ee-key.json
+        run: python build_map.py
+
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
