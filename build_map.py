@@ -207,7 +207,6 @@ RGB_WIDGET_TEMPLATE = Template("""
 {% endmacro %}
 
 {% macro script(this, kwargs) %}
-<script>
 (function(){
 var map = {{ this._parent.get_name() }};
 var BD = {{ this.band_data }};
@@ -320,7 +319,6 @@ document.getElementById('rgb-go').onclick=function(){
   rgbLayer.setOpacity(parseFloat(document.getElementById('rgb-op').value));
 };
 })();
-</script>
 {% endmacro %}
 """)
 
