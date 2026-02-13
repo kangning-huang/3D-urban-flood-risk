@@ -34,22 +34,15 @@
     }
     button.apply-btn:hover { background: #38b6db; }
 
-    /* ---- Auth overlay ---- */
-    #auth-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;
-      display: flex; align-items: center; justify-content: center;
+    /* ---- Loading overlay ---- */
+    #loading-overlay {
+      position: fixed; inset: 0; background: #1a1a2e; z-index: 9999;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
     }
-    #auth-box {
-      background: #1a1a2e; padding: 32px 40px; border-radius: 12px; text-align: center;
-      color: #eee; max-width: 420px;
-    }
-    #auth-box h2 { color: #56ccf2; margin-bottom: 12px; }
-    #auth-box p { font-size: 14px; color: #aaa; margin-bottom: 20px; }
-    #auth-box button {
-      padding: 10px 28px; border: none; border-radius: 6px;
-      background: #56ccf2; color: #1a1a2e; font-weight: 600; font-size: 15px; cursor: pointer;
-    }
-    #auth-box button:hover { background: #38b6db; }
+    #loading-overlay h2 { color: #56ccf2; }
+    #loading-overlay p { color: #aaa; font-size: 14px; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #333; border-top-color: #56ccf2; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .hidden { display: none !important; }
 
     /* ---- Map ---- */
@@ -63,16 +56,11 @@
 </head>
 <body>
 
-<!-- Auth overlay -->
-<div id="auth-overlay">
-  <div id="auth-box">
-    <h2>Global Flood Risk Viewer</h2>
-    <p>This app uses Google Earth Engine. Sign in with your Google account that has Earth Engine access.</p>
-    <button onclick="authenticate()">Sign in with Google</button>
-    <p style="margin-top:16px;font-size:12px;color:#666;">
-      Don't have access? <a href="https://signup.earthengine.google.com/" target="_blank" style="color:#56ccf2;">Sign up for Earth Engine</a>
-    </p>
-  </div>
+<!-- Loading overlay (shown while EE initializes) -->
+<div id="loading-overlay">
+  <h2>Global Flood Risk Viewer</h2>
+  <div class="spinner"></div>
+  <p>Connecting to Google Earth Engine&hellip;</p>
 </div>
 
 <!-- Sidebar -->
@@ -166,9 +154,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@google/earthengine@0.1.391/build/ee_api_js.js"></script>
 <script>
 // ---------------------------------------------------------------------------
-// CONFIG — replace with your OAuth client ID from Google Cloud Console
+// CONFIG — set your Google Cloud project and API key here
+//
+// Setup (one-time):
+//   1. Go to https://console.cloud.google.com
+//   2. Enable the "Earth Engine API" for your project
+//   3. Create an API key (APIs & Services > Credentials > Create Credentials > API Key)
+//   4. Restrict the key to "Earth Engine API" and your GitHub Pages domain
+//   5. Paste the values below
 // ---------------------------------------------------------------------------
-const CLIENT_ID = 'YOUR_OAUTH_CLIENT_ID.apps.googleusercontent.com';
+const EE_PROJECT  = 'YOUR_CLOUD_PROJECT_ID';   // e.g. 'my-ee-project-12345'
+const EE_API_KEY  = 'YOUR_API_KEY';             // e.g. 'AIzaSy...'
 
 // ---------------------------------------------------------------------------
 // Band definitions
@@ -204,25 +200,25 @@ let floodRisk, floodRiskGDP;
 const activeLayers = {};  // key -> L.TileLayer
 
 // ---------------------------------------------------------------------------
-// Auth
+// Auto-initialize with API key (no visitor sign-in required)
 // ---------------------------------------------------------------------------
-function authenticate() {
-  ee.data.authenticateViaOauth(
-    CLIENT_ID,
-    () => { ee.Initialize(null, null, onInitSuccess, onInitError); },
-    (err) => { alert('Authentication failed: ' + err); },
-    null,
-    () => { ee.Initialize(null, null, onInitSuccess, onInitError); }
-  );
-}
+document.addEventListener('DOMContentLoaded', () => {
+  ee.data.setApiKey(EE_API_KEY);
+  ee.Initialize(EE_PROJECT, null, onInitSuccess, onInitError);
+});
 
 function onInitSuccess() {
-  document.getElementById('auth-overlay').classList.add('hidden');
+  document.getElementById('loading-overlay').classList.add('hidden');
   initApp();
 }
 
 function onInitError(err) {
-  alert('Earth Engine initialization failed: ' + (err ? err.message || err : 'Unknown error'));
+  const overlay = document.getElementById('loading-overlay');
+  overlay.innerHTML =
+    '<h2 style="color:#ff6b6b;">Failed to connect to Earth Engine</h2>' +
+    '<p style="color:#aaa;max-width:400px;text-align:center;">' +
+      (err ? err.message || err : 'Check that EE_PROJECT and EE_API_KEY are configured in index.html.') +
+    '</p>';
 }
 
 // ---------------------------------------------------------------------------
