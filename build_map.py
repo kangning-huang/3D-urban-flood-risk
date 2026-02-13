@@ -8,6 +8,7 @@ Usage:
     python build_map.py          # writes index.html
 """
 
+import json
 import os
 
 import ee
@@ -23,9 +24,12 @@ EE_URL = "https://earthengine-highvolume.googleapis.com"
 credentials_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
 if credentials_path and os.path.isfile(credentials_path):
-    # CI / service-account path
+    # CI / service-account path – read project from key file
+    with open(credentials_path) as f:
+        key_data = json.load(f)
+    project = os.environ.get("GCP_PROJECT") or key_data.get("project_id")
     credentials = ee.ServiceAccountCredentials(None, credentials_path)
-    ee.Initialize(credentials, opt_url=EE_URL)
+    ee.Initialize(credentials, project=project, opt_url=EE_URL)
 else:
     # Local development – use default credentials or prompt login
     try:
