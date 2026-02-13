@@ -46,6 +46,7 @@ jobs:
       - name: Build index.html
         env:
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/ee-key.json
+          GOOGLE_CLOUD_CLIENT_SECRET: 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
         run: python build_map.py
 
       - uses: actions/configure-pages@v4
