@@ -39,7 +39,10 @@ jobs:
           # Store your service-account JSON as a GitHub Actions secret
           # named EE_SERVICE_ACCOUNT_KEY
           EE_SERVICE_ACCOUNT_KEY: ${{ secrets.EE_SERVICE_ACCOUNT_KEY }}
-        run: echo "$EE_SERVICE_ACCOUNT_KEY" > /tmp/ee-key.json
+        run: |
+          echo "$EE_SERVICE_ACCOUNT_KEY" > /tmp/ee-key.json
+          echo "Key file size: $(wc -c < /tmp/ee-key.json) bytes"
+          python -c "import json; d=json.load(open('/tmp/ee-key.json')); print('Key type:', d.get('type')); print('Project:', d.get('project_id')); print('Client email:', d.get('client_email'))"
 
       - name: Build index.html
         env:
