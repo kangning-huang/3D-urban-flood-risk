@@ -261,7 +261,7 @@ var RGBLayer = L.GridLayer.extend({
 
 var rgbLayer = new RGBLayer({
   rBand:'exInunD', gBand:'exDmg_pros', bBand:'exDmg',
-  displayMin:0.01, displayMax:0.1, opacity:0.7
+  displayMin:0.01, displayMax:0.1, opacity:0.7, zIndex:1000
 }).addTo(map);
 
 /* ---- Control panel ---- */
