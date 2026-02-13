@@ -10,6 +10,8 @@ Usage:
 
 import json
 import os
+import sys
+import traceback
 
 import ee
 import geemap.foliumap as geemap
@@ -23,20 +25,27 @@ import geemap.foliumap as geemap
 EE_URL = "https://earthengine-highvolume.googleapis.com"
 credentials_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 
-if credentials_path and os.path.isfile(credentials_path):
-    # CI / service-account path – read project from key file
-    with open(credentials_path) as f:
-        key_data = json.load(f)
-    project = os.environ.get("GCP_PROJECT") or key_data.get("project_id")
-    credentials = ee.ServiceAccountCredentials(None, credentials_path)
-    ee.Initialize(credentials, project=project, opt_url=EE_URL)
-else:
-    # Local development – use default credentials or prompt login
-    try:
-        ee.Initialize(opt_url=EE_URL)
-    except Exception:
-        ee.Authenticate()
-        ee.Initialize(opt_url=EE_URL)
+try:
+    if credentials_path and os.path.isfile(credentials_path):
+        # CI / service-account path – read project from key file
+        with open(credentials_path) as f:
+            key_data = json.load(f)
+        project = os.environ.get("GCP_PROJECT") or key_data.get("project_id")
+        print(f"Initializing EE with project={project}")
+        credentials = ee.ServiceAccountCredentials(None, credentials_path)
+        ee.Initialize(credentials, project=project, opt_url=EE_URL)
+    else:
+        # Local development – use default credentials or prompt login
+        try:
+            ee.Initialize(opt_url=EE_URL)
+        except Exception:
+            ee.Authenticate()
+            ee.Initialize(opt_url=EE_URL)
+    print("Earth Engine initialized successfully")
+except Exception as exc:
+    print(f"ERROR initializing Earth Engine: {exc}", file=sys.stderr)
+    traceback.print_exc()
+    sys.exit(1)
 
 # ---------------------------------------------------------------------------
 # Load datasets
