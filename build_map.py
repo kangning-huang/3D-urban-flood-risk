@@ -20,7 +20,7 @@ os.environ["USE_FOLIUM"] = "1"
 
 import ee
 import geemap
-from folium import MacroElement
+from folium import Element, MacroElement
 from jinja2 import Template
 
 # ---------------------------------------------------------------------------
@@ -323,6 +323,64 @@ document.getElementById('rgb-go').onclick=function(){
 """)
 
 # ---------------------------------------------------------------------------
+# SEO / social-sharing <head> tags
+# ---------------------------------------------------------------------------
+# geemap/folium ignore the `title=` kwarg of to_html(), so the generated page
+# has no <title> or meta tags.  Inject them into the document header here so
+# they survive every (daily) regeneration; ensure_head_tags() below is a
+# post-write safety net in case a future folium/geemap version drops them.
+SITE_URL = "https://flood.kangning-huang.com/"
+PAGE_TITLE = "3D Urban Flood Risk | Global Flood Risk Viewer"
+PAGE_DESCRIPTION = (
+    "Interactive global map of urban flood risk integrating building height "
+    "and flood protection standards, from the Scientific Reports (2026) "
+    "height-aware flood assessment study."
+)
+OG_IMAGE = "https://kangning-huang.com/og-default.jpg"
+HEAD_MARKER = "<!-- seo-head-tags -->"
+
+
+def build_head_tags():
+    from html import escape
+
+    t = escape(PAGE_TITLE, quote=True)
+    d = escape(PAGE_DESCRIPTION, quote=True)
+    return f"""{HEAD_MARKER}
+    <title>{t}</title>
+    <meta name="description" content="{d}" />
+    <link rel="canonical" href="{SITE_URL}" />
+    <meta property="og:title" content="{t}" />
+    <meta property="og:description" content="{d}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="{SITE_URL}" />
+    <meta property="og:site_name" content="Kangning (Ken) Huang" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="{OG_IMAGE}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{t}" />
+    <meta name="twitter:description" content="{d}" />
+    <meta name="twitter:image" content="{OG_IMAGE}" />
+"""
+
+
+def ensure_head_tags(path):
+    """Insert the head tags into an already-written HTML file if missing."""
+    with open(path, encoding="utf-8") as f:
+        html = f.read()
+    if HEAD_MARKER in html:
+        return
+    if "<head>" not in html:
+        print("WARNING: no <head> found; SEO tags not inserted", file=sys.stderr)
+        return
+    html = html.replace("<head>", "<head>\n    " + build_head_tags(), 1)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+    print("  + SEO head tags inserted via post-processing fallback")
+
+
+# ---------------------------------------------------------------------------
 # Build the map
 # ---------------------------------------------------------------------------
 m = geemap.Map()
@@ -360,5 +418,7 @@ m.add_child(rgb_widget)
 # ---------------------------------------------------------------------------
 # Export
 # ---------------------------------------------------------------------------
-m.to_html("index.html", title="Global Flood Risk Viewer")
+m.get_root().header.add_child(Element(build_head_tags()), name="seo_head_tags")
+m.to_html("index.html")
+ensure_head_tags("index.html")
 print("✓ Wrote index.html")
